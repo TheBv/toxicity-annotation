@@ -1,3 +1,6 @@
+data/
+venv/
+
 #Maven
 target/
 pom.xml.tag
