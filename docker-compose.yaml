@@ -17,7 +17,7 @@ services:
     restart: always
     environment:
       - QUARKUS_MONGODB_DATABASE=toxic_annotation
-      - QUARKUS_MONGODB_CONNECTION_STRING=mongodb://root:kU%2BfPT8%26tGgz%5DfEh@localhost:27017
+      - QUARKUS_MONGODB_CONNECTION_STRING=mongodb://root:kU%2BfPT8%26tGgz%5DfEh@toxicity_db:27017
     networks:
       - toxicity_net
     container_name: toxicity_backend
