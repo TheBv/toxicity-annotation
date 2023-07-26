@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 // Annotation project
-@MongoEntity(collection = "projects")
+@MongoEntity(database="toxic_games", collection = "projects")
 public class Project extends PanacheMongoEntity {
     // Projektbezogene ID, nicht die interne DB-ID
     public String key;

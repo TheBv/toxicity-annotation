@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 public class Annotation {
@@ -19,6 +20,8 @@ public class Annotation {
     public LocalDateTime updatedAt;
 
     // Annotated list of messages and users
-    public Map<String, AnnotationChoice> messages;
+    public List<AnnotationChoice> messages;
     public Map<String, AnnotationChoice> users;
+    public boolean problem;
+    public AnnotationChoice gameAnnotation;
 }

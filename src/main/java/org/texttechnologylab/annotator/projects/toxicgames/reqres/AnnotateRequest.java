@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.texttechnologylab.annotator.projects.toxicgames.model.AnnotationChoice;
 
-import java.util.Map;
+import java.util.List;
 
 public class AnnotateRequest {
     @NotNull
@@ -18,5 +18,11 @@ public class AnnotateRequest {
 
     @NotNull
     @NotEmpty
-    public Map<String, AnnotationChoice> annotation;
+    public List<AnnotationChoice> annotation;
+
+    @NotNull
+    public boolean problem;
+
+    @NotNull
+    public AnnotationChoice gameAnnotation;
 }

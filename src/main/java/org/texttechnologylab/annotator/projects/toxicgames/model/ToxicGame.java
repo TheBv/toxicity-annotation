@@ -13,4 +13,5 @@ public class ToxicGame extends PanacheMongoEntity {
     public Map<String, Object> log;
     public int logid;
     public boolean success;
+    public List<String> annotators;
 }

@@ -7,6 +7,9 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
@@ -18,7 +21,11 @@ import org.texttechnologylab.annotator.projects.toxicgames.reqres.AnnotateRespon
 import org.texttechnologylab.annotator.projects.toxicgames.reqres.GameNextRequest;
 import org.texttechnologylab.annotator.projects.toxicgames.reqres.GameNextResponse;
 
+import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.model.Filters;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,10 +39,14 @@ public class ToxicGamesResource {
     @Counted(name = "gamesListCount", description = "How many times list games has been called.")
     @Timed(name = "gamesListTimer", description = "A measure of how long it takes to list all games.", unit = MetricUnits.MILLISECONDS)
     public GameNextResponse nextGames(GameNextRequest request) {
-        // TODO Auswahlslogik hinzufügen, siehe dazu auch die anderen Tools als Beispiele
 
-        // Get next game and return chat log
-        ToxicGame next = ToxicGame.findAll().firstResult();
+        List<Bson> aggregations = new ArrayList<>();
+        // Ignore games that we have annotated
+        aggregations.add(Aggregates.match(Filters.nin("annotators",request.annotator)));
+        // Make sure the game hasn't been annotated more than twice
+        aggregations.add(Aggregates.match(Filters.exists("annotators.1", false)));
+
+        ToxicGame next = (ToxicGame) ToxicGame.mongoCollection().aggregate(aggregations).first();
         if (next == null) {
             return null;
         }
@@ -45,6 +56,8 @@ public class ToxicGamesResource {
             response.annotator = request.annotator;
             response.gameId = next.id;
             response.messages = (List<Map<String, Object>>) next.log.get("chat");
+            response.events = next.events;
+            response.players = next.log.get("players");
             return response;
         }
 
@@ -70,7 +83,7 @@ public class ToxicGamesResource {
             annotator.name = request.annotator;
             annotator.annotations = new HashMap<>();
         }
-
+        ToxicGame game = ToxicGame.findById(new ObjectId(request.game_id));
         Annotation annotation = new Annotation();
         annotation.updatedAt = now;
 
@@ -85,7 +98,14 @@ public class ToxicGamesResource {
             annotation.createdAt = existingAnnotation.createdAt;
         }
 
+        if (game.annotators == null)
+            game.annotators = new ArrayList<>();
+        game.annotators.add(request.annotator);
+        game.persistOrUpdate();
+
         annotation.messages = request.annotation;
+        annotation.problem = request.problem;
+        annotation.gameAnnotation = request.gameAnnotation;
 
         annotator.annotations.put(request.game_id, annotation);
         annotator.persistOrUpdate();

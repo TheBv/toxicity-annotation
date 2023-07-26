@@ -13,4 +13,6 @@ public class GameNextResponse {
     public ObjectId gameId;
 
     public List<Map<String, Object>> messages;
+    public List<Map<String, Object>> events;
+    public Object players;
 }
