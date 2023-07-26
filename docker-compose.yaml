@@ -1,0 +1,46 @@
+version: '3'
+services:
+  db:
+    image: mongo
+    restart: always
+    container_name: toxicity_db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: kU+fPT8&tGgz]fEh
+    ports:
+      - "27018:27017"
+    networks:
+      - toxicity_net
+  backend:
+    build: 
+      dockerfile: /src/main/docker/Dockerfile.jvm
+    restart: always
+    environment:
+      - QUARKUS_MONGODB_DATABASE=toxic_annotation
+      - QUARKUS_MONGODB_CONNECTION_STRING=mongodb://root:kU%2BfPT8%26tGgz%5DfEh@localhost:27017
+    networks:
+      - toxicity_net
+    container_name: toxicity_backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+  frontend:
+    build: 
+      context: ./src/main/webapp/
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3000:3000"
+    expose:
+      - 3000
+    volumes:
+      - '/app/node_modules'
+    container_name: toxicity_frontend
+    networks:
+      - toxicity_net
+    depends_on:
+      - backend
+networks:
+  toxicity_net:
+    internal: false
