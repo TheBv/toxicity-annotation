@@ -45,7 +45,7 @@ public class ToxicGamesResource {
         aggregations.add(Aggregates.match(Filters.nin("annotators",request.annotator)));
         // Make sure the game hasn't been annotated more than twice
         aggregations.add(Aggregates.match(Filters.exists("annotators.1", false)));
-
+        aggregations.add(Aggregates.sample(1));
         ToxicGame next = (ToxicGame) ToxicGame.mongoCollection().aggregate(aggregations).first();
         if (next == null) {
             return null;
@@ -56,7 +56,7 @@ public class ToxicGamesResource {
             response.annotator = request.annotator;
             response.gameId = next.id;
             response.messages = (List<Map<String, Object>>) next.log.get("chat");
-            response.events = next.events;
+            response.events = (List<Map<String, Object>>) next.log.get("events");
             response.players = next.log.get("players");
             return response;
         }

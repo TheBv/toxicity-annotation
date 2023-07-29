@@ -9,9 +9,9 @@ import java.util.Map;
 @MongoEntity(database = "toxic_games", collection = "games")
 public class ToxicGame extends PanacheMongoEntity {
     public boolean detoxify;
-    public List<Map<String, Object>> events;
     public Map<String, Object> log;
     public int logid;
     public boolean success;
+    public String lang;
     public List<String> annotators;
 }
