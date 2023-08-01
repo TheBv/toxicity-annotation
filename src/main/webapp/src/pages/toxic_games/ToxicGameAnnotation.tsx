@@ -216,7 +216,7 @@ export function AnnotateRoute() {
         <Col>
           {
             error && (<Alert variant="danger">
-              <p>There was an error finding a game to annotate...</p>
+              <p>There was an error finding a match to annotate...</p>
               <p>Please try again later, or contact us if the error persists.</p>
             </Alert>)
           }
@@ -233,17 +233,17 @@ export function AnnotateRoute() {
             !error && isLoading && annotator && !currentTask && (<Alert variant="info">
               <Spinner animation="border" role="status" size="sm" />
               {' '}
-              Finding next game...
+              Finding next match...
             </Alert>)
           }
           {
             !error && !isLoading && annotator && !currentTask && (<Alert variant="info">
-              There currently are no more games that you can annotate.
+              There currently are no more matches that you can annotate.
             </Alert>)
           }
           {
             !error && !isLoading && annotator && currentTask && currentTask["events"].length === 0 && (<Alert variant="info">
-              <p>Could not find a game to annotate.</p>
+              <p>Could not find a match to annotate.</p>
             </Alert>)
           }
           {
@@ -333,7 +333,7 @@ export function AnnotateRoute() {
                     </tbody>
                   </Table>
                   <Row style={{ textAlign: 'center' }}>
-                    <h3>How would you label the entire game?</h3>
+                    <h3>How would you label the entire match?</h3>
                   </Row>
                   <Controller
                     control={control}
@@ -393,7 +393,7 @@ export function AnnotateRoute() {
                         Send annotation
                       </Button>
 
-                      <FormCheck style={{ marginLeft: '15px', marginTop: '5px' }} label={<h5>I can't annotate this game</h5>} {...register('problem')} />
+                      <FormCheck style={{ marginLeft: '15px', marginTop: '5px' }} label={<h5>I can't annotate this match</h5>} {...register('problem')} />
                     </Col>
                   </Row>
                 </Form>

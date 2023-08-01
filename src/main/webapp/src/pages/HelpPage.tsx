@@ -15,7 +15,7 @@ export default function HelpPage() {
   return <Container>
     <h2>How to annotate</h2>
     <h3>Label the messages</h3>
-    You will be given a list of messages taken from a game. <br />
+    You will be given a list of messages taken from a match. <br />
     Your goal is to annotate each message and give it the label you find subjectively accurate. <br />
     An example can be found below:
     <h4>Important</h4>
@@ -83,8 +83,8 @@ export default function HelpPage() {
         </tr>
       </tbody>
     </Table>
-    <h3>Label the game</h3>
-    After you've labeled the messages you'll need to label the entire game.
+    <h3>Label the match</h3>
+    After you've labeled the messages you'll need to label the entire match.
     <Controller
       control={control}
       name={'gameAnnotation'}
@@ -142,13 +142,13 @@ export default function HelpPage() {
           Send annotation
         </Button>
 
-        <FormCheck style={{ marginLeft: '15px', marginTop: '5px' }} label={<h5>I can't annotate this game</h5>} {...register('problem')} />
+        <FormCheck style={{ marginLeft: '15px', marginTop: '5px' }} label={<h5>I can't annotate this match</h5>} {...register('problem')} />
       </Col>
     </Row>
     <h3>Problems?</h3>
-    If you have any problems with annotating a given game, e.g it's not displayed correctly,
+    If you have any problems with annotating a given match, e.g it's not displayed correctly,
     the language is incorrect or there are other reasons
-    that keep you from properly juding the toxicity of the game click
+    that keep you from properly juding the toxicity of the match click
     on the checkmark next to the "Send Annotation" button. <br/>
     For some outliers you can always select the "N/A" (Not applicable) button
   </Container>
