@@ -1,24 +1,23 @@
 import { Button, Col, Container, Form, Row } from "react-bootstrap";
-import useAnnotator from "../hooks/useAnnotator";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { useAnnotator } from "../zustand/useAnnotator";
 
 interface AnnotatorForm {
   annotator: string | null
 }
 
 export default function AnnotatorPage() {
-  const { annotator, setAnnotator, isLoading } = useAnnotator()
+  const { annotator, setAnnotator } = useAnnotator()
 
   const { register, handleSubmit, setValue } = useForm<AnnotatorForm>({ defaultValues: { annotator: annotator } })
 
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!isLoading)
-      setValue("annotator", annotator)
-  }, [annotator, isLoading, setValue])
+    setValue("annotator", annotator)
+  }, [annotator, setValue])
 
   const onSubmit = (data: AnnotatorForm) => {
     setAnnotator(data.annotator)

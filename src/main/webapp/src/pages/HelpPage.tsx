@@ -47,7 +47,7 @@ export default function HelpPage() {
                     variant={value === "NEUTRAL" ? "secondary" : "outline-secondary"}
                     onClick={() => onChange("NEUTRAL")}
                   >
-                    Neutral
+                    Not Toxic
                   </Button>
                   <Button
                     variant={value === "SLIGHTLY_TOXIC" ? "warning" : "outline-warning"}
@@ -95,7 +95,7 @@ export default function HelpPage() {
               variant={value === "NEUTRAL" ? "secondary" : "outline-secondary"}
               onClick={() => onChange("NEUTRAL")}
             >
-              Neutral
+              Not Toxic
             </Button>
           </Col>
           <Col>

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Container, Row, Col, Alert, Spinner, Table, Form, Button, Modal, FormCheck } from 'react-bootstrap';
 import { BASE_URL } from '../../lib/constants';
-import useAnnotator from '../../hooks/useAnnotator';
 import { BsSearch } from "react-icons/bs";
 import { Controller, useForm } from 'react-hook-form';
+import { useAnnotator } from '../../zustand/useAnnotator';
 
 interface AnnotationTask {
   game_id: string

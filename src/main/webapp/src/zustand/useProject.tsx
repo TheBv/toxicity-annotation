@@ -21,8 +21,6 @@ export interface Project {
   end_at: string
 }
 
-// Ideally this would be in a seperate folder structure...
-// Also one could get away with not using a store
 export const useProjectStore = create<ProjectState>((set, get) => ({
   currentProject: null,
   projectList: [],

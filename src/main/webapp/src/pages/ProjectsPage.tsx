@@ -1,5 +1,5 @@
 import { Badge, Button, Card, Col, Container, Row } from "react-bootstrap"
-import { useProjectStore } from "../hooks/useProject";
+import { useProjectStore } from "../zustand/useProject";
 import { useEffect } from "react";
 import { projectStatusColor } from "../lib/helpers";
 import { useNavigate } from "react-router-dom";

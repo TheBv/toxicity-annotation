@@ -1,12 +1,14 @@
 import { Badge, Container, Nav, NavDropdown, Navbar, Offcanvas, Stack } from "react-bootstrap"
 import { LinkContainer } from "react-router-bootstrap"
-import useAnnotator from "../hooks/useAnnotator"
-import { useProjectStore } from "../hooks/useProject"
+import { useProjectStore } from "../zustand/useProject"
 import { projectStatusColor } from "../lib/helpers"
+import { useAnnotator } from "../zustand/useAnnotator"
+import useAnnotatedCount from "../hooks/useAnnotatedCount"
 
 
 export default function NavBar() {
   const { annotator } = useAnnotator()
+  const { count } = useAnnotatedCount()
   const { currentProject, projectList, setCurrentProject } = useProjectStore()
 
   return <Navbar key="AppNavbar" expand={false} collapseOnSelect={true} className="bg-body-tertiary mb-3">
@@ -16,6 +18,9 @@ export default function NavBar() {
       </Navbar.Brand>
       {currentProject && (
         <Nav.Item>{currentProject["name"]}</Nav.Item>
+      )}
+      {count && (
+        <Nav.Item>Your annotations: {count.self} Total annotations: {count.total}</Nav.Item>
       )}
       <Navbar.Toggle aria-controls={`offcanvasNavbar-expand`} />
       <Navbar.Offcanvas
