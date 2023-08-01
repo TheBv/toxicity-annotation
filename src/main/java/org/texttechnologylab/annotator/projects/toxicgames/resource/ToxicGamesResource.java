@@ -8,6 +8,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
+import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.metrics.MetricUnits;
@@ -18,17 +19,16 @@ import org.texttechnologylab.annotator.projects.toxicgames.model.Annotator;
 import org.texttechnologylab.annotator.projects.toxicgames.model.ToxicGame;
 import org.texttechnologylab.annotator.projects.toxicgames.reqres.AnnotateRequest;
 import org.texttechnologylab.annotator.projects.toxicgames.reqres.AnnotateResponse;
+import org.texttechnologylab.annotator.projects.toxicgames.reqres.GameCountResponse;
 import org.texttechnologylab.annotator.projects.toxicgames.reqres.GameNextRequest;
 import org.texttechnologylab.annotator.projects.toxicgames.reqres.GameNextResponse;
 
+import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Path("/api/v1/toxic_games")
 public class ToxicGamesResource {
@@ -110,6 +110,36 @@ public class ToxicGamesResource {
         annotator.annotations.put(request.game_id, annotation);
         annotator.persistOrUpdate();
 
+        return response;
+    }
+
+    @POST
+    @Path("/count")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Counted(name = "gamesListCount", description = "How many times list games has been called.")
+    @Timed(name = "gamesListTimer", description = "A measure of how long it takes to list all games.", unit = MetricUnits.MILLISECONDS)
+    public GameCountResponse countGames(GameNextRequest request) {
+
+        // Find annotator or create new one
+        Annotator annotator = Annotator.findByName(request.annotator);
+        GameCountResponse response = new GameCountResponse();
+        if (annotator == null) {
+            response.self = 0;
+            response.annotator = null;
+        }
+        else {
+            response.self = annotator.annotations.size();
+            response.annotator = annotator.name;
+        }
+
+        List<Bson> aggregations = new ArrayList<>();
+        aggregations.add(Aggregates.project(new Document("annotationCount", new Document("$size", new Document("$objectToArray", "$annotations")))));
+        aggregations.add(Aggregates.group(null, Accumulators.sum("total", "$annotationCount")));
+
+        var doc = Annotator.mongoDatabase().getCollection("annotators").aggregate(aggregations).first();
+
+        response.total_count = (int) doc.get("total");
         return response;
     }
 }
