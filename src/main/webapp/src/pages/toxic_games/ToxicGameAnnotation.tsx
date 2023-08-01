@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Container, Row, Col, Alert, Spinner, Table, Form, Button, Modal, FormCheck } from 'react-bootstrap';
 import { BASE_URL } from '../../lib/constants';
 import useAnnotator from '../../hooks/useAnnotator';
 import { BsSearch } from "react-icons/bs";
 import { Controller, useForm } from 'react-hook-form';
-
-const CancelToken = axios.CancelToken;
 
 interface AnnotationTask {
   game_id: string
@@ -17,7 +14,9 @@ interface AnnotationTask {
 }
 
 interface AnnotationMessage {
-  msg: string
+  timeInSeconds: number
+  team: string
+  message: string
   name: string
   steamid: string
 }
@@ -49,7 +48,7 @@ interface Player {
 }
 
 interface AnnotationForm {
-  eventAnnotations: string[],
+  messageAnnotations: string[],
   problem: boolean,
   gameAnnotation: string
 }
@@ -66,23 +65,17 @@ export function AnnotateRoute() {
   const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // trigger getting new task
-  // TODO better way to do this?
-  const [triggerGetNewTask, setTriggerGetNewTask] = useState(true);
-
-  const { control, register, handleSubmit, setValue } = useForm<AnnotationForm>({
+  const { control, register, handleSubmit, setValue, reset } = useForm<AnnotationForm>({
     defaultValues: {
       gameAnnotation: 'NEUTRAL',
       problem: false
     }
   })
 
-  // get next tweet to annotate
-  useEffect(() => {
+  const getNewTask = async () => {
     if (!annotator) {
       return;
     }
-
     // reset
     setError(false);
     setCurrentTask(null);
@@ -93,35 +86,38 @@ export function AnnotateRoute() {
     }
 
     console.log("getting next game...", payload)
-    const cancelToken = CancelToken.source();
-    axios.post(BASE_URL + "/api/v1/toxic_games/next", payload, {
-      cancelToken: cancelToken.token
-    })
-      .then(response => {
-        console.log("next game response", response)
-        if (response.status === 200) {
-          // success
-          setCurrentTask(response.data);
-          setValue("eventAnnotations", [...Array(response.data.events.length).keys()].map((v) => 'NEUTRAL'))
-        }
-      })
-      .catch(error => {
-        // error
-        if (!axios.isCancel(error)) {
-          console.log("next error", error)
-          setError(true);
-        }
-      })
-      .then(() => {
-        // always
-        setIsLoading(false);
-      });
+    fetch(BASE_URL + "/api/v1/toxic_games/next", {
+      method: 'POST',
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload)
+    }).then(async response => {
+      console.log("next game response", response)
+      if (response.status === 200) {
+        // success
+        const responseData = await response.json() as AnnotationTask
+        setCurrentTask(responseData);
+        setValue("messageAnnotations", [...Array(responseData.messages.length).keys()].map((v) => 'NEUTRAL'))
+      }
+    }).catch(error => {
+      // error
+      console.log("next error", error)
+      setError(true);
 
-    return () => {
-      cancelToken.cancel();
-    }
+    }).finally(() => {
+      // always
+      setIsLoading(false);
+    });
 
-  }, [annotator, triggerGetNewTask]);
+  }
+
+  useEffect(() => {
+    if (annotator != null)
+      getNewTask()
+    // it's fine for this type of project...
+    // eslint-disable-next-line react-hooks/exhaustive-deps 
+  }, [annotator])
 
   useEffect(() => {
     const map = new Map<string, Player>()
@@ -151,13 +147,13 @@ export function AnnotateRoute() {
   const onSubmit = (data: AnnotationForm) => {
     if (!annotator)
       return
-    console.log(data)
+
     setIsSending(true)
     setError(false)
 
     const payload = {
       "annotator": annotator,
-      "annotation": data.eventAnnotations,
+      "annotation": data.messageAnnotations,
       "problem": data.problem,
       "gameAnnotation": data.gameAnnotation,
       "game_id": currentTask?.game_id,
@@ -173,7 +169,7 @@ export function AnnotateRoute() {
       console.log("annotate response", response)
       if (response.status === 200) {
         // trigger next sentence
-        setTriggerGetNewTask((prev) => !prev)
+        getNewTask()
       }
       else {
         setError(true)
@@ -185,6 +181,7 @@ export function AnnotateRoute() {
       // always
       setIsSending(false)
     });
+    reset()
   }
 
   const getPastEvents = (second: number, pastSeconds: number) => {
@@ -269,22 +266,22 @@ export function AnnotateRoute() {
                     </thead>
                     <tbody>
                       {
-                        currentTask.events.map((event, index) => {
-                          if (event.attacker === "Console")
+                        currentTask.messages.map((message, index) => {
+                          if (message.steamid === "Console")
                             return null
-                          if (event.message == null)
+                          if (message.message == null)
                             return null
-                          const playerData = playerMap.get(event.attacker)
+                          const playerData = playerMap.get(message.steamid)
                           return (
                             <tr key={"game-msg-" + index}>
                               <td>#{index + 1}</td>
-                              <td style={{ backgroundColor: getTeamColor(playerData?.team) }}>{playerData?.team}</td>
+                              <td style={{ backgroundColor: getTeamColor(message.team) }}>{message.team}</td>
                               <td>{playerData?.name}</td>
-                              <td>{event.message}</td>
+                              <td>{message.message}</td>
                               <td>
                                 <Controller
                                   control={control}
-                                  name={`eventAnnotations.${index}`}
+                                  name={`messageAnnotations.${index}`}
                                   render={({ field: { onChange, value }, fieldState: { error } }) =>
                                     <div>
                                       <Button
@@ -292,7 +289,7 @@ export function AnnotateRoute() {
                                         variant={value === "NEUTRAL" ? "secondary" : "outline-secondary"}
                                         onClick={() => onChange("NEUTRAL")}
                                       >
-                                        Neutral
+                                        Not Toxic
                                       </Button>
                                       <Button
                                         id={`radio_msg_ind_${index}`}
@@ -327,7 +324,7 @@ export function AnnotateRoute() {
                                 />
                               </td>
                               <td>
-                                <BsSearch onClick={() => setCurrentSecond(event.second)} style={{cursor: 'pointer'}}/>
+                                <BsSearch onClick={() => setCurrentSecond(message.timeInSeconds)} style={{ cursor: 'pointer' }} />
                               </td>
                             </tr>
                           )
@@ -342,13 +339,13 @@ export function AnnotateRoute() {
                     control={control}
                     name={'gameAnnotation'}
                     render={({ field: { onChange, value }, fieldState: { error } }) =>
-                      <Row style={{textAlign: 'center'}}>
+                      <Row style={{ textAlign: 'center' }}>
                         <Col>
                           <Button
                             variant={value === "NEUTRAL" ? "secondary" : "outline-secondary"}
                             onClick={() => onChange("NEUTRAL")}
                           >
-                            Neutral
+                            Not Toxic
                           </Button>
                         </Col>
                         <Col>
@@ -391,12 +388,12 @@ export function AnnotateRoute() {
                         disabled={isSending}
                         variant={"success"}
                         type='submit'
-                       
+
                       >
                         Send annotation
                       </Button>
-                      
-                      <FormCheck  style={{marginLeft: '15px', marginTop: '5px'}} label={<h5>I can't annotate this game</h5>} {...register('problem')} />
+
+                      <FormCheck style={{ marginLeft: '15px', marginTop: '5px' }} label={<h5>I can't annotate this game</h5>} {...register('problem')} />
                     </Col>
                   </Row>
                 </Form>
@@ -446,9 +443,9 @@ export function EventList({ events, playerMap }: { events: AnnotationEvent[], pl
 
 function eventToString(event: AnnotationEvent) {
   if (event.kill)
-    return "Kill"
+    return "Killed"
   if (event.message)
-    return `Message: ${event.message}`
+    return `Sent Message: ${event.message}`
   if (event.capture)
     return "Captured Point"
   if (event.chargeUsed)
