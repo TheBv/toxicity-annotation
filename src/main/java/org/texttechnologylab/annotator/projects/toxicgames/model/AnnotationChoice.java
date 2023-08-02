@@ -1,7 +1,7 @@
 package org.texttechnologylab.annotator.projects.toxicgames.model;
 
 public enum AnnotationChoice {
-    POSITIVE,
+    N_A,
     NEUTRAL,
     SLIGHTLY_TOXIC,
     TOXIC,
