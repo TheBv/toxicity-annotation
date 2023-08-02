@@ -314,8 +314,8 @@ export function AnnotateRoute() {
                                       </Button>
                                       <Button
                                         id={`radio_msg_ind_${index}`}
-                                        variant={value === "N/A" ? "info" : "outline-info"}
-                                        onClick={() => onChange("N/A")}
+                                        variant={value === "N_A" ? "info" : "outline-info"}
+                                        onClick={() => onChange("N_A")}
                                       >
                                         N/A
                                       </Button>
@@ -374,8 +374,8 @@ export function AnnotateRoute() {
                         </Col>
                         <Col>
                           <Button
-                            variant={value === "N/A" ? "info" : "outline-info"}
-                            onClick={() => onChange("N/A")}
+                            variant={value === "N_A" ? "info" : "outline-info"}
+                            onClick={() => onChange("N_A")}
                           >
                             N/A
                           </Button>
