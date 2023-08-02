@@ -43,12 +43,20 @@ public class ToxicGamesResource {
         List<Bson> aggregations = new ArrayList<>();
         // Ignore games that we have annotated
         aggregations.add(Aggregates.match(Filters.nin("annotators",request.annotator)));
-        // Make sure the game hasn't been annotated more than twice
-        aggregations.add(Aggregates.match(Filters.exists("annotators.1", false)));
+        // Make sure the game has been annotated once
+        aggregations.add(Aggregates.match(Filters.exists("annotators.0", true)));
         aggregations.add(Aggregates.sample(1));
         ToxicGame next = (ToxicGame) ToxicGame.mongoCollection().aggregate(aggregations).first();
+        // If there's no games with at least one annotation
         if (next == null) {
-            return null;
+            aggregations.clear();
+            aggregations.add(Aggregates.match(Filters.nin("annotators",request.annotator)));
+            // Make sure the game hasn't been annotated more than twice
+            aggregations.add(Aggregates.match(Filters.exists("annotators.1", false)));
+            aggregations.add(Aggregates.sample(1));
+            next = (ToxicGame) ToxicGame.mongoCollection().aggregate(aggregations).first();
+            if (next == null)
+                return null;
         }
 
         if (next.log.containsKey("chat")) {
