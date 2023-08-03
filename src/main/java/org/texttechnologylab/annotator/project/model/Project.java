@@ -18,6 +18,7 @@ public class Project extends PanacheMongoEntity {
     public List<String> authors;
     public ProjectStatus status;
 
+    public ProjectStrategy strategy;
     @BsonProperty("start_at")
     public LocalDateTime startAt;
 

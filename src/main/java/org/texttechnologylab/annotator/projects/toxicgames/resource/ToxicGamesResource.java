@@ -14,6 +14,8 @@ import org.bson.types.ObjectId;
 import org.eclipse.microprofile.metrics.MetricUnits;
 import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.Timed;
+import org.texttechnologylab.annotator.project.model.Project;
+import org.texttechnologylab.annotator.project.model.ProjectStrategy;
 import org.texttechnologylab.annotator.projects.toxicgames.model.Annotation;
 import org.texttechnologylab.annotator.projects.toxicgames.model.Annotator;
 import org.texttechnologylab.annotator.projects.toxicgames.model.ToxicGame;
@@ -40,18 +42,23 @@ public class ToxicGamesResource {
     @Timed(name = "gamesListTimer", description = "A measure of how long it takes to list all games.", unit = MetricUnits.MILLISECONDS)
     public GameNextResponse nextGames(GameNextRequest request) {
 
+        Project project = Project.find(new Document("key", "toxic_games")).firstResult();
+        ToxicGame next = null;
         List<Bson> aggregations = new ArrayList<>();
-        // Ignore games that we have annotated
-        aggregations.add(Aggregates.match(Filters.nin("annotators",request.annotator)));
-        // Make sure the game has been annotated once
-        aggregations.add(Aggregates.match(Filters.exists("annotators.0", true)));
-        aggregations.add(Aggregates.match(Filters.exists("annotators.1", false)));
-        aggregations.add(Aggregates.sample(1));
-        ToxicGame next = (ToxicGame) ToxicGame.mongoCollection().aggregate(aggregations).first();
+        if (project.strategy == ProjectStrategy.FILL) {
+            // Ignore games that we have annotated
+            aggregations.add(Aggregates.match(Filters.nin("annotators", request.annotator)));
+            // Make sure the game has been annotated once
+            aggregations.add(Aggregates.match(Filters.exists("annotators.0", true)));
+            aggregations.add(Aggregates.match(Filters.exists("annotators.1", false)));
+            aggregations.add(Aggregates.sample(1));
+            next = (ToxicGame) ToxicGame.mongoCollection().aggregate(aggregations).first();
+        }
+
         // If there's no games with at least one annotation
         if (next == null) {
             aggregations.clear();
-            aggregations.add(Aggregates.match(Filters.nin("annotators",request.annotator)));
+            aggregations.add(Aggregates.match(Filters.nin("annotators", request.annotator)));
             // Make sure the game hasn't been annotated more than twice
             aggregations.add(Aggregates.match(Filters.exists("annotators.1", false)));
             aggregations.add(Aggregates.sample(1));
@@ -136,14 +143,14 @@ public class ToxicGamesResource {
         if (annotator == null) {
             response.self = 0;
             response.annotator = null;
-        }
-        else {
+        } else {
             response.self = annotator.annotations.size();
             response.annotator = annotator.name;
         }
 
         List<Bson> aggregations = new ArrayList<>();
-        aggregations.add(Aggregates.project(new Document("annotationCount", new Document("$size", new Document("$objectToArray", "$annotations")))));
+        aggregations.add(Aggregates.project(new Document("annotationCount",
+                new Document("$size", new Document("$objectToArray", "$annotations")))));
         aggregations.add(Aggregates.group(null, Accumulators.sum("total", "$annotationCount")));
 
         var doc = Annotator.mongoDatabase().getCollection("annotators").aggregate(aggregations).first();
