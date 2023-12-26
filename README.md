@@ -1,4 +1,12 @@
-# ttlab-annotator
+# Toxicity-annotator
+
+Based on the TTLab-Annotator
+# Frontend
+The frontend is written using React and Typescript.
+It offers users a simple way to get game data and annotate each message and the game itself as toxic or not.
+
+# Backend
+You can find the backend under the java directory.
 
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
